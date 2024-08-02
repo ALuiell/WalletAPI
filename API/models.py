@@ -1,5 +1,7 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
+from .utils import generate_account_number
 
 
 class Category(models.Model):
@@ -9,28 +11,19 @@ class Category(models.Model):
         return self.name
 
 
-class Account(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.user.username})"
-
-
 class BankAccount(models.Model):
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='bank_accounts')
-    name = models.CharField(max_length=255)
-    account_number = models.CharField(max_length=20, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bank_accounts')
+    name = models.CharField(max_length=255, null=True, blank=True)
+    account_number = models.CharField(max_length=8, unique=True, default=generate_account_number)
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
 
     def __str__(self):
-        return f"{self.account.user.username} - {self.name} ({self.account_number})"
+        return f"{self.user.username} - ({self.account_number})"
 
 
 class Transaction(models.Model):
-    bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE)
+    bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE, related_name='transactions')
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
     description = models.CharField(max_length=255, blank=True)
