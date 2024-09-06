@@ -1,7 +1,6 @@
 from djoser.views import UserViewSet
-from rest_framework import viewsets, generics, permissions, status
-from rest_framework.response import Response
-
+from rest_framework import viewsets, generics, permissions
+from .models import BankAccount, Transaction, Category
 from .serializers import *
 from .permissions import IsAccountOwner, IsAdminUserOrReadOnly
 
@@ -15,7 +14,7 @@ class BankAccountCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user  # Получаем текущего пользователя
+        user = self.request.user
         return BankAccount.objects.filter(user=user).prefetch_related(
             'user')
 
@@ -63,4 +62,6 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUserOrReadOnly]
 
 
-
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
